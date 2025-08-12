@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  h2-database:
+    image: nemerosa/h2
+    container_name: h2-db
+    ports:
+      - "8082:8082"  # H2 Console Web
+      - "9092:9082"  # H2 TCP Server  
+    volumes:
+      - ./data:/opt/h2-data
+    environment:
+      - H2_OPTIONS=-webAllowOthers -tcpAllowOthers -baseDir /opt/h2-data
+    restart: unless-stopped
+    command: >
+      java -cp /usr/lib/h2/bin/h2*.jar org.h2.tools.Server
+      -web -webAllowOthers -webPort 8082
+      -tcp -tcpAllowOthers -tcpPort 9092
+      -baseDir /opt/h2-data
+      -ifNotExists
