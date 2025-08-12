@@ -19,17 +19,7 @@ export class AuthRepository implements IAuthRepository {
   async findById(id: string): Promise<Auth | null> {
     return await this.authRepository.findOne({
       where: { id },
-      relations: ['user'],
     });
-  }
-
-  async update(id: string, authData: Partial<Auth>): Promise<Auth | null> {
-    await this.authRepository.update(id, authData);
-    return await this.findById(id);
-  }
-
-  async delete(id: string): Promise<void> {
-    await this.authRepository.delete(id);
   }
 
   async findByEmail(email: string): Promise<Auth | null> {
@@ -44,20 +34,6 @@ export class AuthRepository implements IAuthRepository {
       where: { email },
     });
     return count > 0;
-  }
-
-  async findByUserId(userId: string): Promise<Auth | null> {
-    return await this.authRepository.findOne({
-      where: { userId },
-      relations: ['user'],
-    });
-  }
-
-  async changePassword(
-    id: string,
-    hashedPassword: string,
-  ): Promise<Auth | null> {
-    return await this.update(id, { password: hashedPassword });
   }
 
   async userIsActive(id: string): Promise<boolean> {

@@ -4,10 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 
 @Entity('auth')
 export class Auth {
@@ -22,16 +19,6 @@ export class Auth {
 
   @Column({ default: true })
   isActive: boolean;
-
-  @Column({ type: 'enum', enum: ['admin', 'user'], default: 'user' })
-  role: string;
-
-  @OneToOne(() => User, { nullable: true })
-  @JoinColumn()
-  user: User;
-
-  @Column({ nullable: true })
-  userId: string;
 
   @CreateDateColumn()
   createdAt: Date;

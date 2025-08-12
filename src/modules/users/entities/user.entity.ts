@@ -1,11 +1,9 @@
-import { Auth } from 'src/modules/auth/entities/auth.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
 } from 'typeorm';
 
 @Entity('users')
@@ -33,9 +31,6 @@ export class User {
 
   @Column({ length: 11, unique: true })
   cpf: string;
-
-  @OneToOne(() => Auth, (auth) => auth.user, { nullable: true })
-  auth: Auth;
 
   @CreateDateColumn()
   createdAt: Date;

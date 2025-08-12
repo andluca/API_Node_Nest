@@ -23,6 +23,10 @@ export class UserRepository implements IUserRepository {
     return this.userRepository.findOne({ where: { id } });
   }
 
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { email } });
+  }
+
   async update(id: string, userData: Partial<User>): Promise<User | null> {
     await this.userRepository.update(id, userData);
     return this.findById(id);
@@ -30,5 +34,15 @@ export class UserRepository implements IUserRepository {
 
   async delete(id: string): Promise<void> {
     await this.userRepository.delete(id);
+  }
+
+  async cpfExists(cpf: string): Promise<boolean> {
+    const count = await this.userRepository.count({ where: { cpf } });
+    return count > 0;
+  }
+
+  async emailExists(email: string): Promise<boolean> {
+    const count = await this.userRepository.count({ where: { email } });
+    return count > 0;
   }
 }
