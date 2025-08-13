@@ -12,7 +12,7 @@ export class UpdateUserService {
   constructor(private readonly userRepository: UserRepository) {}
 
   async execute(id: string, userData: Partial<User>): Promise<User> {
-    await this.validateUserExists(id);
+    const existingUser = await this.validateUserExists(id);
 
     this.validateUpdateData(userData);
 
@@ -20,7 +20,12 @@ export class UpdateUserService {
 
     await this.validateUniqueness(id, userData);
 
-    const updatedUser = await this.userRepository.update(id, userData);
+    const finalData = {
+      ...existingUser,
+      ...userData,
+    };
+
+    const updatedUser = await this.userRepository.update(id, finalData);
     if (!updatedUser) {
       throw new NotFoundException('Erro ao atualizar usuário');
     }

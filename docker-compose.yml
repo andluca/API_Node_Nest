@@ -1,19 +1,24 @@
 version: '3.8'
 services:
   h2-database:
-    image: nemerosa/h2
+    image: openjdk:11-jre-slim
     container_name: h2-db
     ports:
       - "8082:8082"  # H2 Console Web
-      - "9092:9082"  # H2 TCP Server  
+      - "5435:5435"  # H2 PostgreSQL Server
     volumes:
-      - ./data:/opt/h2-data
-    environment:
-      - H2_OPTIONS=-webAllowOthers -tcpAllowOthers -baseDir /opt/h2-data
-    restart: unless-stopped
+      - h2_data:/opt/h2-data
+    working_dir: /opt
     command: >
-      java -cp /usr/lib/h2/bin/h2*.jar org.h2.tools.Server
-      -web -webAllowOthers -webPort 8082
-      -tcp -tcpAllowOthers -tcpPort 9092
-      -baseDir /opt/h2-data
-      -ifNotExists
+      bash -c "
+      apt-get update && 
+      apt-get install -y curl && 
+      curl -o h2.jar https://repo1.maven.org/maven2/com/h2database/h2/2.1.214/h2-2.1.214.jar &&
+      java -cp h2.jar org.h2.tools.Server 
+      -web -webAllowOthers -webPort 8082 
+      -pg -pgAllowOthers -pgPort 5435 
+      -baseDir /opt/h2-data -ifNotExists
+      "
+
+volumes:
+  h2_data:
