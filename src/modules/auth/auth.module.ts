@@ -7,11 +7,12 @@ import { AuthLoginService } from './service/auth-login.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthLoginController } from './controllers/auth-login.controller';
-import { H2DatabaseService } from 'src/config/database.config';
+import { DatabaseModule } from 'src/config/database.module';
 
 @Module({
   imports: [
     ConfigModule,
+    DatabaseModule,
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -23,13 +24,7 @@ import { H2DatabaseService } from 'src/config/database.config';
     }),
   ],
   controllers: [AuthLoginController],
-  providers: [
-    H2DatabaseService,
-    AuthRepository,
-    AuthLoginService,
-    JwtStrategy,
-    JwtAuthGuard,
-  ],
+  providers: [AuthRepository, AuthLoginService, JwtStrategy, JwtAuthGuard],
   exports: [JwtModule, PassportModule, JwtAuthGuard, AuthLoginService],
 })
 export class AuthModule {}
