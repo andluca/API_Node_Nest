@@ -4,8 +4,8 @@ services:
     image: openjdk:11-jre-slim
     container_name: h2-db
     ports:
-      - "8082:8082"  # H2 Console Web
-      - "5435:5435"  # H2 PostgreSQL Server
+      - "8082:8082"
+      - "5435:5435"
     volumes:
       - h2_data:/opt/h2-data
     working_dir: /opt
