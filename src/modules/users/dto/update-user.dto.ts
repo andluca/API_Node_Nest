@@ -41,6 +41,4 @@ export class UpdateUserDto {
     message: 'Nacionalidade deve ter entre 2 e 255 caracteres',
   })
   nationality?: string;
-
-  cpf?: never;
 }
