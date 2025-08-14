@@ -24,12 +24,10 @@ export class AuthRepository implements IAuthRepository {
 
   async create(authData: Partial<Auth>): Promise<Auth> {
     const id = uuidv4();
-    const createdAt = new Date();
-    const updatedAt = new Date();
 
     const query = `
       INSERT INTO auth (id, email, password, is_active, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING *
     `;
 
@@ -37,9 +35,7 @@ export class AuthRepository implements IAuthRepository {
       id,
       authData.email,
       authData.password,
-      authData.isActive,
-      createdAt,
-      updatedAt,
+      authData.isActive ?? true,
     ];
 
     const auth = await this.h2Database.query(query, values);
@@ -74,10 +70,11 @@ export class AuthRepository implements IAuthRepository {
 
   async emailExists(email: string): Promise<boolean> {
     const result = await this.h2Database.query(
-      'SELECT * FROM auth WHERE email = $1',
+      'SELECT COUNT(*) as count FROM auth WHERE email = $1',
       [email],
     );
-    return !!(result.rowCount && result.rowCount > 0);
+    const row = result.rows[0] as { count: string | number };
+    return parseInt(String(row.count)) > 0;
   }
 
   async userIsActive(id: string): Promise<boolean> {
