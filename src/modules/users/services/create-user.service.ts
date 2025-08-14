@@ -67,27 +67,23 @@ export class CreateUserService {
 
   public isValidCpf(cpf: string): boolean {
     if (!cpf) return false;
-    const cleanCpf = cpf.replace(/\D/g, '');
-    if (cleanCpf.length !== 11) return false;
-    if (/^(\d)\1{10}$/.test(cleanCpf)) return false;
-
     let sum = 0;
     for (let i = 0; i < 9; i++) {
-      sum += parseInt(cleanCpf.charAt(i)) * (10 - i);
+      sum += parseInt(cpf.charAt(i)) * (10 - i);
     }
-    let remainder = 11 - (sum % 11);
-    const digit1 = remainder < 2 ? 0 : remainder;
+    let remainder = sum % 11;
+    const digit1 = remainder < 2 ? 0 : 11 - remainder;
 
-    if (parseInt(cleanCpf.charAt(9)) !== digit1) return false;
+    if (parseInt(cpf.charAt(9)) !== digit1) return false;
 
     sum = 0;
     for (let i = 0; i < 10; i++) {
-      sum += parseInt(cleanCpf.charAt(i)) * (11 - i);
+      sum += parseInt(cpf.charAt(i)) * (11 - i);
     }
-    remainder = 11 - (sum % 11);
-    const digit2 = remainder < 2 ? 0 : remainder;
+    remainder = sum % 11;
+    const digit2 = remainder < 2 ? 0 : 11 - remainder;
 
-    return parseInt(cleanCpf.charAt(10)) === digit2;
+    return parseInt(cpf.charAt(10)) === digit2;
   }
 
   private isValidEmail(email: string): boolean {
