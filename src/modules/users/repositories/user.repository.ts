@@ -27,26 +27,33 @@ export class UserRepository implements IUserRepository {
   }
 
   async create(userData: Partial<User>): Promise<User> {
-    const user = this.h2Database.query(
+    const formattedBirthDate =
+      userData.birthDate instanceof Date
+        ? userData.birthDate.toISOString().split('T')[0]
+        : userData.birthDate;
+
+    const params = [
+      uuidv4(),
+      userData.name,
+      userData.gender,
+      userData.email,
+      formattedBirthDate,
+      userData.placeOfBirth,
+      userData.nationality,
+      userData.cpf,
+    ];
+    await this.h2Database.query(
       `
-      INSERT INTO users (id, name, gender, email, birth_date, place_of_birth, nationality, cpf)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING *
+      INSERT INTO users (id, name, gender, email, birth_date, place_of_birth, nationality, cpf, created_at, updated_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `,
-      [
-        uuidv4(),
-        userData.name,
-        userData.gender,
-        userData.email,
-        userData.birthDate,
-        userData.placeOfBirth,
-        userData.nationality,
-        userData.cpf,
-      ],
+      params,
     );
 
-    const dbRow = (await user).rows[0] as DatabaseUserRow;
-    return this.mapRowToUser(dbRow);
+    const selectSql = `SELECT * FROM users WHERE id = $1`;
+    const res = await this.h2Database.query(selectSql, [params[0]]);
+    const row = res.rows[0] as DatabaseUserRow;
+    return this.mapRowToUser(row);
   }
 
   async findAll(): Promise<User[]> {
@@ -73,7 +80,12 @@ export class UserRepository implements IUserRepository {
   }
 
   async update(id: string, userData: Partial<User>): Promise<User | null> {
-    const query = `
+    const formattedBirthDate =
+      userData.birthDate instanceof Date
+        ? userData.birthDate.toISOString().split('T')[0]
+        : userData.birthDate;
+
+    const updateQuery = `
       UPDATE users
       SET
         name = $1,
@@ -85,22 +97,24 @@ export class UserRepository implements IUserRepository {
         cpf = $7,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $8
-      RETURNING *
     `;
 
     const values = [
       userData.name,
       userData.gender,
       userData.email,
-      userData.birthDate,
+      formattedBirthDate,
       userData.placeOfBirth,
       userData.nationality,
       userData.cpf,
       id,
     ];
 
-    const result = this.h2Database.query(query, values);
-    const dbRow = (await result).rows[0] as DatabaseUserRow;
+    await this.h2Database.query(updateQuery, values);
+
+    const selectSql = `SELECT * FROM users WHERE id = $1`;
+    const res = await this.h2Database.query(selectSql, [id]);
+    const dbRow = res.rows[0] as DatabaseUserRow;
     return dbRow ? this.mapRowToUser(dbRow) : null;
   }
 
@@ -110,17 +124,19 @@ export class UserRepository implements IUserRepository {
 
   async cpfExists(cpf: string): Promise<boolean> {
     const result = await this.h2Database.query(
-      'SELECT * FROM users WHERE cpf = $1',
+      'SELECT COUNT(*) as count FROM users WHERE cpf = $1',
       [cpf],
     );
-    return !!(result.rowCount && result.rowCount > 0);
+    const row = result.rows[0] as { count: string | number };
+    return parseInt(String(row.count)) > 0;
   }
 
   async emailExists(email: string): Promise<boolean> {
     const result = await this.h2Database.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT COUNT(*) as count FROM users WHERE email = $1',
       [email],
     );
-    return !!(result.rowCount && result.rowCount > 0);
+    const row = result.rows[0] as { count: string | number };
+    return parseInt(String(row.count)) > 0;
   }
 }
