@@ -1,98 +1,148 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# API Node Nest – H2 (PostgreSQL Mode)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API de exemplo com NestJS usando H2 Database em modo PostgreSQL para fins didáticos. Inclui autenticação JWT, CRUD de usuários e documentação Swagger.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requisitos
+- Node.js LTS (>= 18)
+- npm (ou yarn/pnpm)
+- Docker Desktop
 
-## Description
+## Arquitetura
+- NestJS (TypeScript)
+- H2 Database 2.1.214 em modo PostgreSQL (porta 5435)
+- Driver pg (protocolo/SQL compatível PostgreSQL)
+- JWT + Passport
+- Swagger/OpenAPI
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Configuração do Banco (Docker)
+O projeto inclui um docker-compose para subir o H2 em modo PostgreSQL.
 
-## Project setup
+1) Verifique/atualize o docker-compose.yml:
 
-```bash
-$ yarn install
+```yaml
+version: '3.8'
+services:
+  h2-database:
+    image: openjdk:11-jre-slim
+    container_name: h2-db
+    ports:
+      - "5435:5435"      # PostgreSQL protocol
+      # - "8082:8082"   # (opcional) Console Web do H2
+    volumes:
+      - h2_data:/opt/h2-data
+    working_dir: /opt
+    command: >
+      bash -c "
+      apt-get update && apt-get install -y curl &&
+      curl -L -o h2.jar https://repo1.maven.org/maven2/com/h2database/h2/2.1.214/h2-2.1.214.jar &&
+      java -cp h2.jar org.h2.tools.Server
+      -pg -pgAllowOthers -pgPort 5435
+      # -web -webAllowOthers -webPort 8082     # (descomente para console)
+      -baseDir /opt/h2-data -ifNotExists
+      "
+volumes:
+  h2_data:
 ```
 
-## Compile and run the project
-
-```bash
-# development
-$ yarn run start
-
-# watch mode
-$ yarn run start:dev
-
-# production mode
-$ yarn run start:prod
+2) Suba o banco:
+```powershell
+docker-compose up -d
+docker ps
+docker logs -f h2-db
 ```
 
-## Run tests
+Você deverá ver algo como:
+- “PG server running at pg://0.0.0.0:5435”
+- (se habilitado) “Web Console server running at http://0.0.0.0:8082”
 
-```bash
-# unit tests
-$ yarn run test
+## Variáveis de Ambiente (.env)
+Crie um arquivo .env na raiz com:
 
-# e2e tests
-$ yarn run test:e2e
+```env
+# Database H2 (PostgreSQL mode)
+DB_TYPE=postgres
+DB_HOST=localhost
+DB_PORT=5435
+DB_USER=sa
+DB_PASSWORD=
+DB_NAME=testdb
 
-# test coverage
-$ yarn run test:cov
+# JWT
+JWT_SECRET=your-super-secret-jwt-key-here
+JWT_EXPIRES_IN=24h
+
+# App
+PORT=3000
+NODE_ENV=development
 ```
 
-## Deployment
+Observações:
+- Campo birth_date é do tipo DATE no banco. A API envia/espera “YYYY-MM-DD”.
+- Em H2 PG mode, evite recursos específicos de PostgreSQL que não sejam suportados.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Instalação e Execução
+```powershell
+# instalar dependências
+npm install
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+# desenvolvimento
+npm run start:dev
 
-```bash
-$ yarn install -g @nestjs/mau
-$ mau deploy
+# produção (build + start)
+npm run build
+npm run start:prod
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+API:
+- Base URL: http://localhost:3000
+- Swagger: http://localhost:3000/api
 
-## Resources
+## Autenticação e Usuário Padrão (didático)
+- A aplicação possui um usuário admin padrão criado na configuração do database (seed didático).
+- Credenciais:
+  - email: admin@admin.com
+  - senha: Admin123!
+- Por ser um projeto de demonstração/estudo, manter o usuário no código-fonte é intencional. Não há fluxo de alteração de senha.
 
-Check out a few resources that may come in handy when working with NestJS:
+Fluxo:
+1) Login
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@admin.com","password":"Admin123!"}'
+```
+2) Use o token JWT retornado no header Authorization:
+```
+Authorization: Bearer <token>
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Endpoints Principais
+- POST /auth/login
+- GET /users
+- GET /users/{id}
+- POST /users
+- PUT /users/{id}
+- DELETE /users/{id}
 
-## Support
+Consulte o Swagger para contratos completos e exemplos.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Formatos Importantes
+- birthDate: “YYYY-MM-DD”
+- cpf: somente dígitos (11 caracteres)
 
-## Stay in touch
+## Troubleshooting
+- Banco não conecta:
+  - Verifique docker ps e logs: docker logs -f h2-db
+  - Confirme .env: DB_HOST=localhost, DB_PORT=5435
+  - Porta 5435 livre no host
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Erros de data:
+  - Envie birthDate como string “YYYY-MM-DD”.
 
-## License
+- Swagger vazio/sem schemas:
+  - Garanta que DTOs têm decorators do Swagger (@ApiProperty) e que os controllers referenciam os DTOs com @ApiBody({ type: ... }).
+  - Verifique tsconfig com “experimentalDecorators” e “emitDecoratorMetadata”.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Aviso
+Este projeto é voltado à demonstração de tecnologia (NestJS + H2 em modo PostgreSQL). Boas práticas de produção, como gestão segura de segredos, rotação/alteração de senha e RBAC, não estão implementadas
