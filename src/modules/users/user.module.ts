@@ -8,9 +8,18 @@ import { DeleteUserService } from './services/delete-user.service';
 import { CreateUserController } from './controllers/create-user.controller';
 import { UpdateUserController } from './controllers/update-user.controller';
 import { H2DatabaseService } from 'src/config/database.config';
+import { ListUsersController } from './controllers/list-users.controller';
+import { FindUserByIdController } from './controllers/find-user-by-id.controller';
+import { DeleteUserController } from './controllers/delete-user.controller';
 
 @Module({
-  controllers: [CreateUserController, UpdateUserController],
+  controllers: [
+    CreateUserController,
+    UpdateUserController,
+    ListUsersController,
+    FindUserByIdController,
+    DeleteUserController,
+  ],
   providers: [
     H2DatabaseService,
     UserRepository,
