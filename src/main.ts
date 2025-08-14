@@ -17,12 +17,10 @@ async function bootstrap() {
   app.enableCors();
 
   const config = new DocumentBuilder()
-    .setTitle('Cadastro de Pessoas API')
-    .setDescription('API REST para cadastro de pessoas com versionamento')
-    .setVersion('2.0')
+    .setTitle('API Usuários')
+    .setDescription('Documentação da API de Usuários')
+    .setVersion('1.0')
     .addBearerAuth()
-    .addTag('users-v1', 'Usuários V1 - CRUD básico')
-    .addTag('users-v2', 'Usuários V2 - Com endereço')
     .addTag('auth', 'Autenticação JWT')
     .build();
 

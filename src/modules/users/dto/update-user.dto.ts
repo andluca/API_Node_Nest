@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/swagger';
 import {
   IsString,
   IsEmail,
@@ -6,8 +7,9 @@ import {
   Length,
   Matches,
 } from 'class-validator';
+import { CreateUserDto } from './create-user.dto';
 
-export class UpdateUserDto {
+export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsString({ message: 'Nome deve ser uma string' })
   @Length(2, 255, { message: 'Nome deve ter entre 2 e 255 caracteres' })
